@@ -1,9 +1,22 @@
+/*  Updates the gamepad UI based on input and calls callback functions
+    for axis and button input. The callback functions are passed as arguments
+    to the startGamepad function. */
+
+// Firefox detection and warning
+const isFirefox = typeof InstallTrigger !== "undefined";
+if (typeof InstallTrigger !== "undefined") {
+    console.error = "Firefox gamepad API does not support pressure sensitive triggers - this is needed for controlling cars speed. Please use a chromium-based browser instead.";
+    alert("Use a chromium-based browser, read console for more info.");
+}
+
 // Change status indicator color when gamepad is connected/disconnected
 window.addEventListener("gamepadconnected", function (e) {
     document.querySelector(".statusIndicator").style.backgroundColor = "green";
+    document.getElementById("gamepadStatus").textContent = "Connected";
 });
 window.addEventListener("gamepaddisconnected", function (e) {
     document.querySelector(".statusIndicator").style.backgroundColor = "red";
+    document.getElementById("gamepadStatus").textContent = "Disconnected";
 });
 
 const buttonMapping = {
@@ -114,11 +127,4 @@ export default function startGamepad(pollInterval, axisCallback, buttonCallback)
             });
         }
     }, pollInterval);
-}
-
-// Firefox detection and warning
-var isFirefox = typeof InstallTrigger !== "undefined";
-if (isFirefox) {
-    console.error = "Firefox gamepad API does not support pressure sensitive triggers - this is needed for controlling cars speed. Please use a chromium-based browser instead.";
-    alert("Use a chromium-based browser, read console for more info.");
 }

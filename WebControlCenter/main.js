@@ -1,4 +1,7 @@
 import startGamepad from "./gamepad.js";
+import startWebRTCConnection from "./webrtc.js";
+
+startWebRTCConnection();
 
 const gamepadPollInterval = 25;
 

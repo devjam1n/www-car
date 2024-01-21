@@ -3,50 +3,57 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>www.car</title>
+  <title>www-car</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
   <script src="main.js" type="module" defer></script>
 </head>
 <body>
-  <h1>www.car</h1>
-  <!-- Gamepad -->
-  <div class="gamepad">
-    <div class="leftTriggers">
-        <div class="leftTriggers_up"></div>
-        <div class="leftTriggers_down"></div>
-    </div>
-    <div class="rightTriggers">
-        <div class="rightTriggers_up"></div>
-        <div class="rightTriggers_down"></div>
-    </div>
-    <div class="arrows">
-        <div class="arrows_up"></div>
-        <div class="arrows_right"></div>
-        <div class="arrows_down"></div>
-        <div class="arrows_left"></div>
-    </div>
-    <div class="statusIndicator"></div>
-    <div class="buttons">
-        <div class="buttons_up"></div>
-        <div class="buttons_right"></div>
-        <div class="buttons_down"></div>
-        <div class="buttons_left"></div>
-    </div>
-    <div class="leftStick">
-        <div class="leftStick_dot"></div>
-    </div>
-    <div class="rightStick">
-        <div class="rightStick_dot"></div>
-    </div>
-    <svg class="gamepadBackground" width="600" height="200" viewBox="0 0 1239 838" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M50.4066 324.456C54.4477 286.008 88.892 258.116 127.34 262.157L345.14 285.048C361.618 286.78 373.572 301.542 371.84 318.02L333.949 678.534C324.741 766.141 246.257 829.696 158.65 820.488V820.488C71.0433 811.28 7.48836 732.796 16.6962 645.189L50.4066 324.456Z" fill="#D9D9D9" />
-        <path d="M867.136 318.18C865.404 301.702 877.358 286.941 893.836 285.209L1111.64 262.317C1150.08 258.276 1184.53 286.168 1188.57 324.617L1222.28 645.35C1231.49 732.957 1167.93 811.441 1080.33 820.648V820.648C992.719 829.856 914.235 766.301 905.027 678.694L867.136 318.18Z" fill="#D9D9D9" />
-        <path d="M44 250C44 111.929 155.929 0 294 0H945C1083.07 0 1195 111.929 1195 250V386H44V250Z" fill="#D9D9D9" />
-        <path d="M243 255H996V255C996 368.771 903.771 461 790 461H449C335.229 461 243 368.771 243 255V255Z" fill="#D9D9D9" />
-        <rect x="417" width="406" height="43" fill="white" />
-        <path d="M379 0H415C437.091 0 455 17.9086 455 40V115H379V0Z" fill="#D9D9D9" />
-        <path d="M861 0H825C802.909 0 785 17.9086 785 40V115H861V0Z" fill="#D9D9D9" />
-    </svg>
+  <h1>www-car</h1>
+  <p>Gamepad status: <span id='gamepadStatus'>Awaiting connection (press a button)</span></p>
+  <p>Signaling server: <span id='signalingStatus'>Connecting...</span></p>
+  <p>WebRTC connection: <span id='webrtcStatus'>Waiting...</span></p>
+  <div class="layout">
+      <video id="remoteVideo" autoplay controls playsinline muted></video>
+      <!-- Gamepad -->
+      <div class="gamepad">
+        <div class="leftTriggers">
+            <div class="leftTriggers_up"></div>
+            <div class="leftTriggers_down"></div>
+        </div>
+        <div class="rightTriggers">
+            <div class="rightTriggers_up"></div>
+            <div class="rightTriggers_down"></div>
+        </div>
+        <div class="arrows">
+            <div class="arrows_up"></div>
+            <div class="arrows_right"></div>
+            <div class="arrows_down"></div>
+            <div class="arrows_left"></div>
+        </div>
+        <div class="statusIndicator"></div>
+        <div class="buttons">
+            <div class="buttons_up"></div>
+            <div class="buttons_right"></div>
+            <div class="buttons_down"></div>
+            <div class="buttons_left"></div>
+        </div>
+        <div class="leftStick">
+            <div class="leftStick_dot"></div>
+        </div>
+        <div class="rightStick">
+            <div class="rightStick_dot"></div>
+        </div>
+        <svg class="gamepadBackground" width="600" height="200" viewBox="0 0 1239 838" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50.4066 324.456C54.4477 286.008 88.892 258.116 127.34 262.157L345.14 285.048C361.618 286.78 373.572 301.542 371.84 318.02L333.949 678.534C324.741 766.141 246.257 829.696 158.65 820.488V820.488C71.0433 811.28 7.48836 732.796 16.6962 645.189L50.4066 324.456Z" fill="#D9D9D9" />
+            <path d="M867.136 318.18C865.404 301.702 877.358 286.941 893.836 285.209L1111.64 262.317C1150.08 258.276 1184.53 286.168 1188.57 324.617L1222.28 645.35C1231.49 732.957 1167.93 811.441 1080.33 820.648V820.648C992.719 829.856 914.235 766.301 905.027 678.694L867.136 318.18Z" fill="#D9D9D9" />
+            <path d="M44 250C44 111.929 155.929 0 294 0H945C1083.07 0 1195 111.929 1195 250V386H44V250Z" fill="#D9D9D9" />
+            <path d="M243 255H996V255C996 368.771 903.771 461 790 461H449C335.229 461 243 368.771 243 255V255Z" fill="#D9D9D9" />
+            <rect x="417" width="406" height="43" fill="white" />
+            <path d="M379 0H415C437.091 0 455 17.9086 455 40V115H379V0Z" fill="#D9D9D9" />
+            <path d="M861 0H825C802.909 0 785 17.9086 785 40V115H861V0Z" fill="#D9D9D9" />
+        </svg>
+  </div>
 </div>
 </body>
 </html>

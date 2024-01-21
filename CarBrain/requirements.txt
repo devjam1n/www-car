@@ -1,0 +1,3 @@
+aiortc
+socketio
+cv2
