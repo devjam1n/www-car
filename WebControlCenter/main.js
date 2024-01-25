@@ -1,16 +1,19 @@
 import startGamepad from "./gamepad.js";
 import startWebRTCConnection from "./webrtc.js";
 
-startWebRTCConnection();
+const { localConnection, sendData } = startWebRTCConnection();
 
 const gamepadPollInterval = 25;
 
-function handleAxisMove(axisIndex, value) {
-    console.log(`Axis ${axisIndex} moved to ${value}`);
+function gamepadInputCallback(axisIndex, value) {
+    // Ignore axes and buttons that are not used
+    if (![0, 6, 7].includes(axisIndex)) return;
+
+    // Rounding to reduce data size
+    const roundedValue = Math.round(value * 100) / 100;
+
+    // Send data to car in format: axisIndex,value
+    sendData(`${axisIndex},${roundedValue}`);
 }
 
-function handleButtonPress(buttonIndex, value) {
-    console.log(`Button ${buttonIndex} pressed with value ${value}`);
-}
-
-startGamepad(gamepadPollInterval, handleAxisMove, handleButtonPress);
+startGamepad(gamepadPollInterval, gamepadInputCallback);

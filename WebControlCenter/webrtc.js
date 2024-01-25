@@ -24,6 +24,28 @@ export default function startWebRTCConnection() {
 
     const localConnection = new RTCPeerConnection(iceConfiguration);
 
+    // Create a data channel
+    const dataChannel = localConnection.createDataChannel("controllerInput");
+
+    // Handle data channel events
+    dataChannel.onopen = () => {
+        document.getElementById("dataStatus").textContent = "Opened";
+        console.log("Data channel is open");
+    };
+
+    dataChannel.onerror = (error) => {
+        document.getElementById("dataStatus").textContent = "Error";
+        console.error("Data Channel Error:", error);
+    };
+
+    // dataChannel.onmessage = (event) => {
+    //     console.log("Received message:", event.data);
+    // };
+
+    dataChannel.onclose = () => {
+        document.getElementById("dataStatus").textContent = "Closed";
+    };
+
     localConnection.onicecandidate = (event) => {
         if (event.candidate && event.candidate.candidate !== "") {
             console.log("New ICE candidate");
@@ -56,6 +78,15 @@ export default function startWebRTCConnection() {
         localConnection.setRemoteDescription(JSON.parse(answer)).then((a) => console.log("Set remote SDP"));
     }
 
+    function sendData(data) {
+        if (dataChannel.readyState === "open") {
+            dataChannel.send(data);
+        } else {
+            console.error("Data channel is not open");
+            throw new Error("Data channel is not open");
+        }
+    }
+
     // SIGNALING
     const signalingStatusEl = document.getElementById("signalingStatus");
 
@@ -86,5 +117,5 @@ export default function startWebRTCConnection() {
             .catch((e) => console.error(e));
     });
 
-    return localConnection;
+    return { localConnection, sendData };
 }

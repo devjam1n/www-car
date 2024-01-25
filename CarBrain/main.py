@@ -107,6 +107,7 @@ async def main():
                 def on_data_channel(channel):
                     @channel.on("message")
                     def on_message(message):
+                        # Received controller input from Peer A | Format: axisIndex,value
                         print("Received message:", message)
 
                     @channel.on("open")

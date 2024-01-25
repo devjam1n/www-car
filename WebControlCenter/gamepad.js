@@ -105,7 +105,7 @@ function updateAxisUI(axisIndex, value) {
     }
 }
 
-export default function startGamepad(pollInterval, axisCallback, buttonCallback) {
+export default function startGamepad(pollInterval, gamepadInputCallback) {
     setInterval(() => {
         resetControllerUI();
         const gamepad = navigator.getGamepads()[0];
@@ -115,14 +115,15 @@ export default function startGamepad(pollInterval, axisCallback, buttonCallback)
             gamepad.buttons.forEach((button, index) => {
                 if (button.value > 0) {
                     updateButtonUI(index, button.value);
-                    buttonCallback(index, button.value);
+                    gamepadInputCallback(index, button.value);
                 }
             });
             // Axes values
             gamepad.axes.forEach((axis, index) => {
-                if (axis > 0.05 || axis < -0.05) {
+                // Circumvent minimal stick drift
+                if (axis > 0.075 || axis < -0.075) {
                     updateAxisUI(index, axis);
-                    axisCallback(index, axis);
+                    gamepadInputCallback(index, axis);
                 }
             });
         }
