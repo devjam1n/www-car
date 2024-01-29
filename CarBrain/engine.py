@@ -1,5 +1,6 @@
 import threading
 import time
+from GPIO import start_servo, start_motor, set_servo_position, set_motor_position
 
 # Default PWM values for servo and motor
 SERVO_CENTERED_PWN = 6.7
@@ -26,7 +27,7 @@ last_motor_pwn = MOTOR_STOPPED_PWN
 def start_servo():
     global servo_active
     servo_active = True
-    # start_PWN(SERVO_CENTERED_PWN, MOTOR_STOPPED_PWN)
+    start_servo(SERVO_CENTERED_PWN)
     print("Servo now active")
 
     # Input monitoring loop as a background thread
@@ -38,7 +39,7 @@ def start_servo():
 def start_motor():
     global motor_active
     motor_active = True
-    # start_PWN(SERVO_CENTERED_PWN, MOTOR_STOPPED_PWN)
+    start_motor(SERVO_CENTERED_PWN, MOTOR_STOPPED_PWN)
     print("Motor now active")
 
     # Input monitoring loop as a background thread
@@ -50,12 +51,14 @@ def start_motor():
 def stop_motor():
     global motor_active
     motor_active = False
+    set_motor_position(MOTOR_STOPPED_PWN)
     print(f"Motor position reset to default: {MOTOR_STOPPED_PWN}")
 
 
 def stop_servo():
     global servo_active
     servo_active = False
+    set_servo_position(SERVO_CENTERED_PWN)
     print(f"Servo position reset to default: {SERVO_CENTERED_PWN}")
 
 
@@ -114,6 +117,7 @@ def handle_controller_input(axis_index: int, value: float):
         servo_position_rounded = round(servo_position, 1)
 
         print(f"Servo position set to {servo_position_rounded}")
+        set_servo_position(servo_position_rounded)
     elif axis_name == "reverse":
         last_reverse_input = value
         update_motor_position()
@@ -163,6 +167,6 @@ def update_motor_position():
         last_motor_pwn = motor_position
 
         print(f"Motor position set to {motor_position}")
-        # set_motor_position(motor_position)
+        set_motor_position(motor_position)
     except Exception as e:
         print(f"Error updating motor position: {e}")

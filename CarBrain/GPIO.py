@@ -13,8 +13,10 @@ GPIO.setup(MOTOR_PIN, GPIO.OUT)
 servo_pwm = GPIO.PWM(SERVO_PIN, 50)
 motor_pwm = GPIO.PWM(MOTOR_PIN, 50)
 
-def start_PWN(servo_position, motor_position):
+def start_servo(servo_position):
     servo_pwm.start(servo_position)
+
+def start_motor(motor_position):
     motor_pwm.start(motor_position)
 
 def set_servo_position(position):
