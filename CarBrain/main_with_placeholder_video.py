@@ -5,6 +5,7 @@ from aiortc import RTCPeerConnection, RTCSessionDescription, RTCConfiguration, R
 import socketio
 from av import VideoFrame
 import cv2
+from engine import handle_controller_input
 
 from config import SIGNALING_SERVER_URL, SIGNALING_SERVER_TOKEN
 
@@ -12,7 +13,6 @@ VIDEO_FILE_PATH = 'video_placeholder.mp4'
 
 sio = None
 peer_connection = None
-picam2 = None
 
 class PlaceholderVideoTrack(VideoStreamTrack):
     def __init__(self, video_file):
@@ -56,7 +56,6 @@ async def create_peer_connection():
 
 async def main():
     global peer_connection
-    global picam2
     global sio
 
     try:
@@ -97,11 +96,14 @@ async def main():
                     @channel.on("message")
                     def on_message(message):
                         # Received controller input from Peer A | Format: axisIndex,value
-                        print("Received message:", message)
+                        if "," in message:
+                            axis_index, value = message.split(",")
+                            handle_controller_input(int(axis_index), float(value))
 
                         # Send timestamp to Peer A
                         if "," not in message:
                             channel.send(str(int(time.time() * 1000)))
+                            print(f"Recieved {message} and sent timestamp to Peer A")
 
                     @channel.on("open")
                     def on_open():
@@ -172,9 +174,6 @@ async def main():
         if peer_connection is not None:
             await peer_connection.close()
             print("Closed peer connection")
-        if picam2 is not None:
-            picam2.stop()
-            print("Stopped camera")
         print("Graceful shutdown complete")
 
 if __name__ == '__main__':

@@ -32,7 +32,7 @@ setInterval(() => {
 
     latestPing = Date.now();
     sendData(latestPing);
-}, 500);
+}, 5000);
 
 dataChannel.onmessage = (event) => {
     const pong = parseInt(event.data);
