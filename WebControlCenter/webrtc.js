@@ -38,10 +38,6 @@ export default function startWebRTCConnection() {
         console.error("Data Channel Error:", error);
     };
 
-    // dataChannel.onmessage = (event) => {
-    //     console.log("Received message:", event.data);
-    // };
-
     dataChannel.onclose = () => {
         document.getElementById("dataStatus").textContent = "Closed";
     };
@@ -66,6 +62,15 @@ export default function startWebRTCConnection() {
         document.getElementById("remoteVideo").srcObject = event.streams[0];
         console.log(document.getElementById("remoteVideo").srcObject);
         console.log(event.track.readyState); // should be "live"
+    };
+
+    // Handle connection state change
+    localConnection.oniceconnectionstatechange = (event) => {
+        if (localConnection.iceConnectionState === "disconnected") {
+            console.log("Disconnected");
+            document.getElementById("webrtcStatus").textContent = "Disconnected";
+            document.getElementById("dataStatus").textContent = "Closed";
+        }
     };
 
     localConnection.createOffer({ offerToReceiveVideo: true }).then((offer) => {
@@ -117,5 +122,5 @@ export default function startWebRTCConnection() {
             .catch((e) => console.error(e));
     });
 
-    return { localConnection, sendData };
+    return { localConnection, dataChannel, sendData };
 }

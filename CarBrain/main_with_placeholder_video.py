@@ -2,61 +2,56 @@ import time
 import json
 import asyncio
 from aiortc import RTCPeerConnection, RTCSessionDescription, RTCConfiguration, RTCIceServer, RTCIceCandidate, VideoStreamTrack
-from picamera2 import Picamera2
 import socketio
 from av import VideoFrame
 import cv2
 
 from config import SIGNALING_SERVER_URL, SIGNALING_SERVER_TOKEN
 
-CAMERA_SIZE = (640, 480)
-USE_CAMERA = True
+VIDEO_FILE_PATH = 'video_placeholder.mp4'
 
 sio = None
 peer_connection = None
 picam2 = None
 
-# Custom VideoStreamTrack class that captures frames and formats them to what aiortc expects
-class Picamera2Track(VideoStreamTrack):
-    def __init__(self, camera):
+class PlaceholderVideoTrack(VideoStreamTrack):
+    def __init__(self, video_file):
         super().__init__()
-        self.camera = camera
+        self.cap = cv2.VideoCapture(video_file)
         self.running = True
 
     async def recv(self):
         while self.running:
-            try:
-                # Capture a frame from the camera
-                frame = self.camera.capture_array()
+            ret, frame = self.cap.read()
+            if not ret:
+                self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)  # Loop back to the start
+                ret, frame = self.cap.read()  # Read the first frame
+                if not ret:
+                    print("Failed to loop the video")
+                    self.running = False
+                    continue
 
-                # Convert RGBA to BGR
-                frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2BGR)
+            # Convert the frame to the correct format
+            av_frame = VideoFrame.from_ndarray(frame, format="bgr24")
+            av_frame.pts, av_frame.time_base = await self.next_timestamp()
 
-                # Convert the frame to the correct format
-                av_frame = VideoFrame.from_ndarray(frame, format="bgr24")
-
-                # Manage timestamps
-                av_frame.pts, av_frame.time_base = await self.next_timestamp()
-
-                return av_frame
-            except Exception as e:
-                print(f"Error capturing frame: {e}")
-                # If an error occurs, stop the loop
-                self.running = False
+            return av_frame
 
     @property
     def kind(self):
         return "video"
 
+    def __del__(self):
+        self.cap.release()
+
 async def create_peer_connection():
     global peer_connection
-    # Close existing peer connection, if any, so that we can create a new one in case of reconnection
     if peer_connection is not None:
         await peer_connection.close()
     peer_connection = RTCPeerConnection(configuration=RTCConfiguration([RTCIceServer("stun:fr-turn1.xirsys.com")]))
 
-    # Add video track
-    video_track = Picamera2Track(picam2)
+    # Add video track from the placeholder video
+    video_track = PlaceholderVideoTrack(VIDEO_FILE_PATH)
     peer_connection.addTrack(video_track)
 
 async def main():
@@ -65,14 +60,6 @@ async def main():
     global sio
 
     try:
-        # Camera instance
-        picam2 = Picamera2()
-        picam2.configure(picam2.create_video_configuration(main={"size": CAMERA_SIZE}))
-        picam2.start()
-
-        # Wait for camera to warm up
-        await asyncio.sleep(2)
-
         # Socket.IO client
         sio = socketio.AsyncClient()
 
@@ -114,7 +101,7 @@ async def main():
 
                         # Send timestamp to Peer A
                         if "," not in message:
-                            await channel.send(str(int(time.time() * 1000)))
+                            channel.send(str(int(time.time() * 1000)))
 
                     @channel.on("open")
                     def on_open():
