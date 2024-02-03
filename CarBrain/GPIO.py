@@ -10,9 +10,20 @@ SERVO_CENTERED_PW = 1500
 MOTOR_STOPPED_PW = 1500
 
 # Initialize pigpio library and GPIO pin
-pi = pigpio.pi()
+#pi = pigpio.pi()
+
+# Fake pigpio pi object for testing on non-Raspberry Pi devices
+class fake_pi:
+    def __init__(self):
+        self.connected = True
+        self.set_servo_pulsewidth = lambda pin, pw: None
+        self.set_servo_pulsewidth = lambda pin, pw: None
+        self.stop = lambda: print("Stopping pigpio")
+pi = fake_pi()
+
 if not pi.connected:
-    exit()
+    print("Failed to connect to pigpio")
+    #exit()
 
 # Functions to set servo/motor pulse width
 def set_servo_pulsewidth(pulse_width):

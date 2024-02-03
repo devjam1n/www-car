@@ -107,25 +107,35 @@ function updateAxisUI(axisIndex, value) {
 
 export default function startGamepad(pollInterval, gamepadInputCallback) {
     setInterval(() => {
-        resetControllerUI();
+        let hasInput = false;
+
         const gamepad = navigator.getGamepads()[0];
+        resetControllerUI();
 
         if (gamepad) {
-            // Button values
+            // Buttons
             gamepad.buttons.forEach((button, index) => {
                 if (button.value > 0) {
                     updateButtonUI(index, button.value);
-                    gamepadInputCallback(index, button.value);
+
+                    hasInput = true;
                 }
             });
-            // Axes values
+
+            // Axes
             gamepad.axes.forEach((axis, index) => {
                 // Circumvent minimal stick drift
                 if (axis > 0.075 || axis < -0.075) {
                     updateAxisUI(index, axis);
-                    gamepadInputCallback(index, axis);
+
+                    hasInput = true;
                 }
             });
+
+            // Callback if any input
+            if (hasInput && gamepadInputCallback) {
+                gamepadInputCallback(gamepad);
+            }
         }
     }, pollInterval);
 }

@@ -4,18 +4,38 @@ import startWebRTCConnection from "./webrtc.js";
 const { localConnection, dataChannel, sendData } = startWebRTCConnection();
 
 const gamepadPollInterval = 25;
+const forwardMarginIfAlsoReverse = 0.25;
 
-// Send gamepad data to car
-function gamepadInputCallback(axisIndex, value) {
-    // Ignore axes and buttons that are not used
-    if (![0, 6, 7].includes(axisIndex)) return;
+// Helper to round to max. two decimal places
+function roundToTwo(num) {
+    return Math.round(num * 100) / 100;
+}
 
-    // Rounding to reduce data size
-    const roundedValue = Math.round(value * 100) / 100;
+// Run every time a gamepad input is detected
+function gamepadInputCallback(gamepad) {
+    // Forward and reverse format: 0-1
+    const forwardValue = gamepad.buttons[7].value; // Right trigger
+    const reverseValue = gamepad.buttons[6].value; // Left trigger
+    // Sterring format: -1 to 1
+    let sterringValue = gamepad.axes[0]; // Left stick horizontal axis
 
-    // If open data channel, send data to car in format: "axisIndex,roundedValue"
+    // Circumvent minimal stick drift
+    if (sterringValue > -0.075 && sterringValue < 0.075) {
+        sterringValue = 0;
+    }
+
+    // Calculate throttle control (smooth forward and reverse simontaneously)
+    const forwardLessIfBackwards = reverseValue > 0 ? forwardValue - forwardMarginIfAlsoReverse : forwardValue;
+    const throttleValue = roundToTwo(forwardLessIfBackwards - reverseValue);
+    const throttleValueMinMax = Math.min(1, Math.max(-1, throttleValue));
+
+    // Format: throttle,sterring
+    const dataString = `${throttleValueMinMax},${roundToTwo(sterringValue)}`;
+
+    // Send data if connected
     if (localConnection.connectionState === "connected") {
-        sendData(`${axisIndex},${roundedValue}`);
+        console.log(dataString);
+        sendData(dataString);
     }
 }
 startGamepad(gamepadPollInterval, gamepadInputCallback);
