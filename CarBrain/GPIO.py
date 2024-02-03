@@ -1,34 +1,43 @@
-import RPi.GPIO as GPIO
+# Configure GPIO pins and pulse width constants here
 
-# Both of these are in BOARD numbering scheme
-SERVO_PIN = 32
-MOTOR_PIN = 33
+import pigpio # pigpio instead of RPi.GPIO for hardware PWM (must run as service)
 
-# Setup
-GPIO.setmode(GPIO.BOARD)  # Use BOARD numbering scheme
-GPIO.setup(SERVO_PIN, GPIO.OUT)
-GPIO.setup(MOTOR_PIN, GPIO.OUT)
+# BCM numbering scheme
+SERVO_PIN = 12
+MOTOR_PIN = 13
+# Default pulse width for servo and motor
+SERVO_CENTERED_PW = 1500
+MOTOR_STOPPED_PW = 1500
 
-# PWN frequency
-servo_pwm = GPIO.PWM(SERVO_PIN, 50)
-motor_pwm = GPIO.PWM(MOTOR_PIN, 50)
+# Initialize pigpio library and GPIO pin
+pi = pigpio.pi()
+if not pi.connected:
+    exit()
 
-def start_servo(servo_position):
-    servo_pwm.start(servo_position)
+# Functions to set servo/motor pulse width
+def set_servo_pulsewidth(pulse_width):
+    # Validate pulse width
+    if pulse_width < 500 or pulse_width > 2500:
+        print("Invalid pulse width")
 
-def start_motor(motor_position):
-    motor_pwm.start(motor_position)
+    # Set pulse width
+    pi.set_servo_pulsewidth(SERVO_PIN, pulse_width)
+    print(f"Servo pulse width set to {pulse_width}")
 
-def set_servo_position(position):
-    servo_pwm.ChangeDutyCycle(position)
-    print(f"Servo position set to {position}")
+def set_motor_pulsewidth(pulse_width):
+    if pulse_width < 500 or pulse_width > 2500:
+        print("Invalid pulse width")
 
-def set_motor_position(position):
-    motor_pwm.ChangeDutyCycle(position)
-    print(f"Motor position set to {position}")
+    pi.set_servo_pulsewidth(MOTOR_PIN, pulse_width)
+    print(f"Motor pulse width set to {pulse_width}")
 
-def cleanup():
-    servo_pwm.stop()
-    motor_pwm.stop()
-    GPIO.cleanup()
-    print("GPIO cleanup complete")
+# Functions to reset pulse width of servo/motor (centered/stopped)
+def reset_servo_pulsewidth():
+    set_servo_pulsewidth(SERVO_CENTERED_PW)
+    print(f"Servo position reset to default: {SERVO_CENTERED_PW}")
+
+def reset_motor_pulsewidth():
+    set_motor_pulsewidth(MOTOR_STOPPED_PW)
+    print(f"Motor position reset to default: {MOTOR_STOPPED_PW}")
+
+#pi.stop()

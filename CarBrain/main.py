@@ -8,6 +8,7 @@ from av import VideoFrame
 import cv2
 
 from config import SIGNALING_SERVER_URL, SIGNALING_SERVER_TOKEN
+from engine import handle_controller_input
 
 CAMERA_SIZE = (640, 480)
 USE_CAMERA = True
@@ -110,11 +111,14 @@ async def main():
                     @channel.on("message")
                     def on_message(message):
                         # Received controller input from Peer A | Format: axisIndex,value
-                        print("Received message:", message)
+                        if "," in message:
+                            axis_index, value = message.split(",")
+                            handle_controller_input(int(axis_index), float(value))
 
                         # Send timestamp to Peer A
                         if "," not in message:
-                            await channel.send(str(int(time.time() * 1000)))
+                            channel.send(str(int(time.time() * 1000)))
+                            print(f"Recieved {message} and sent timestamp to Peer A")
 
                     @channel.on("open")
                     def on_open():
