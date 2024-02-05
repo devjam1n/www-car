@@ -1,3 +1,5 @@
 aiortc
 socketio
 cv2
+pigpio
+cv2

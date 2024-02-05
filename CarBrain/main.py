@@ -110,10 +110,10 @@ async def main():
                 def on_data_channel(channel):
                     @channel.on("message")
                     def on_message(message):
-                        # Received controller input from Peer A | Format: axisIndex,value
+                        # Received controller input from Peer A | Format: throttle,sterring (-1 to 1)
                         if "," in message:
-                            axis_index, value = message.split(",")
-                            handle_controller_input(int(axis_index), float(value))
+                            throttle, sterring = message.split(",")
+                            handle_controller_input(float(throttle), float(sterring))
 
                         # Send timestamp to Peer A
                         if "," not in message:
