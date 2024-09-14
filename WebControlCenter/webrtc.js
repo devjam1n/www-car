@@ -73,7 +73,10 @@ export default function startWebRTCConnection() {
         }
     };
 
-    localConnection.createOffer({ offerToReceiveVideo: true }).then((offer) => {
+    localConnection.addTransceiver('video', { direction: 'recvonly' });
+    // Use the above instead of localConnection.createOffer({ offerToReceiveVideo: true }) as that doesn't work in Safari
+
+    localConnection.createOffer().then((offer) => {
         localConnection.setLocalDescription(offer);
         // Send offer to peer B
         socket.emit("offer", JSON.stringify(offer));
