@@ -18,10 +18,19 @@ function gamepadInputCallback(gamepad) {
     const reverseValue = gamepad.buttons[6].value; // Left trigger
     // Sterring format: -1 to 1
     let sterringValue = gamepad.axes[0]; // Left stick horizontal axis
+    // Pan and tilt format: -1 to 1
+    let panValue = gamepad.axes[2]; // Right stick horizontal axis
+    let tiltValue = gamepad.axes[3]; // Right stick vertical axis
 
     // Circumvent minimal stick drift
     if (sterringValue > -0.075 && sterringValue < 0.075) {
         sterringValue = 0;
+    }
+    if (panValue > -0.075 && panValue < 0.075) {
+        panValue = 0;
+    }
+    if (tiltValue > -0.075 && tiltValue < 0.075) {
+        tiltValue = 0;
     }
 
     // Calculate throttle control (smooth forward and reverse simontaneously)
@@ -29,8 +38,8 @@ function gamepadInputCallback(gamepad) {
     const throttleValue = roundToTwo(forwardLessIfBackwards - reverseValue);
     const throttleValueMinMax = Math.min(1, Math.max(-1, throttleValue));
 
-    // Format: throttle,sterring
-    const dataString = `${throttleValueMinMax},${roundToTwo(sterringValue)}`;
+    // Format: throttle,sterring,pan,tilt
+    const dataString = `${throttleValueMinMax},${roundToTwo(sterringValue)},${roundToTwo(panValue)},${roundToTwo(tiltValue)}`;
 
     // Send data if connected
     if (localConnection.connectionState === "connected") {
